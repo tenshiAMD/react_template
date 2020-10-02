@@ -1,0 +1,39 @@
+name: Maintainability
+
+on:
+  pull_request:
+  pull_request_target:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  check_maintainability:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Restore npm cache
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - run: npm install
+      - run: npx stylelint "**/*.css" --fix
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply stylelint changes
+          push_options: --force
+      - run: npx eslint . --fix
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply eslint changes
+          push_options: --force
